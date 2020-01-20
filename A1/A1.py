@@ -3,13 +3,14 @@ import re
 import math
 
 # Open the file in read mode 
-text = open(sys.argv[1], "r") 
+#text = open(sys.argv[1], "r") 
 
 class UnigramModel:
     def __init__(self, text):
+        textFile = open(text, "r")
         self.freq_dict = dict()
         self.corpusSize = 0
-        for line in text:
+        for line in textFile:
             # append stop token to EOLs
             line = line + ' <STOP>'
             # split the line into tokens
@@ -27,6 +28,7 @@ class UnigramModel:
                     self.freq_dict[token] = 1
 
         self.freq_dict = self.replaceUNKs(self.freq_dict)
+        textFile.close()
 
     # this function replaces all keys with < 3 frequency with 'unk'
     def replaceUNKs(self, idict):
@@ -69,8 +71,15 @@ class UnigramModel:
         #Find the log probability of each sentence and sum them all up
         for sentence in sentences:
             sampleSize += len(sentence)
-            logProb = math.log(self.calcSentenceProb(sentence), 2)
-            logSum += logProb
+            sentenceProb = self.calcSentenceProb(sentence)
+
+            #Log is undefined if input is not > 0
+            if sentenceProb > 0:
+                logProb = math.log(self.calcSentenceProb(sentence), 2)
+                logSum += logProb
+            #Here we assume Pr = 0, so perplexity is infinite, return -1 to signify this
+            else:
+                return -1
 
         #To get perplexity, multiply this sum by the negative reciprocal 
         #of sample size and exponentiate it base 2
@@ -79,11 +88,31 @@ class UnigramModel:
 
         return perplexity
 
+    #Uses a test file and calculates perplexity based on that sample
+    def testModel(self, test):
+        testFile = open(test, "r")
+
+        sentences = []
+
+        for line in testFile:
+            # append stop token to EOLs
+            line = line + ' <STOP>'
+
+            # split the line into tokens and strip whitespace
+            sentence = [token.strip() for token in line.split(" ")]
+
+            sentences.append(sentence)
+
+        testFile.close()
+
+        return self.calcPerplexity(sentences)
+
+
 # we still need to fill in a function that parses each line in the text
 # and implements the unigram language model by calling calc_prob
 
 def main():
-    uni = UnigramModel(text)
+    uni = UnigramModel(sys.argv[1])
 
     #Some tests
     print("Pr(\"sibling\"): " + str(uni.calcTokenProb("sibling")))
@@ -92,6 +121,8 @@ def main():
     print(uni.calcSentenceProb([]))
 
     print("\n Perplexity: " + str(uni.calcPerplexity([sentence, ["hello", "world"]])))
+
+    print("Files perplexity: " + str(uni.testModel(sys.argv[2])))
 
 if __name__ == '__main__':
     main()
