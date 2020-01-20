@@ -2,7 +2,6 @@ import sys
 import re
 import math
 from fractions import Fraction
-import decimal
 
 # Open the file in read mode 
 #text = open(sys.argv[1], "r") 
