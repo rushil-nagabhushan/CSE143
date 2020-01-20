@@ -6,9 +6,6 @@ from fractions import Fraction
 # Open the file in read mode 
 #text = open(sys.argv[1], "r") 
 
-def decimal_from_fraction(frac):
-    return frac.numerator / decimal.Decimal(frac.denominator)
-
 class UnigramModel:
     def __init__(self, text):
         textFile = open(text, "r")
@@ -59,7 +56,6 @@ class UnigramModel:
         return prob
 
     def calcSentenceProb(self, sentence):
-        #print("Pr(" + str(sentence) + ")")
 
         #Return 0 for empty sentence
         if not sentence:
@@ -84,9 +80,6 @@ class UnigramModel:
             sampleSize += len(sentence)
             sentenceProb = self.calcSentenceProb(sentence)
 
-            #print(sentenceProb)
-            #print(decimal_from_fraction(sentenceProb))
-
             #Log is undefined if input is not > 0
             if sentenceProb.numerator > 0:
                 logProb = math.log(sentenceProb.numerator, 2) - math.log(sentenceProb.denominator, 2)
@@ -95,7 +88,6 @@ class UnigramModel:
             else:
                print("Sentence:" + str(sentence))
                return -1
-
 
         #To get perplexity, multiply this sum by the negative reciprocal 
         #of sample size and exponentiate it base 2
