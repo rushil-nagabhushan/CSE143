@@ -23,15 +23,7 @@ class UnigramModel:
                 else:
                     self.freq_dict[token] = 1
 
-# this is code for figuring out why I am getting 26613 unique tokens
-# instead of the required 26602. I get 26600 before the <STOP> and unk tokens
-# are added to the text contents
-
-      #  testd = {k:v for (k,v) in self.freq_dict.items() if v > 2}
-      #  print(len(testd))
         self.freq_dict = self.replaceUNKs(self.freq_dict)
-      #  print(self.calc_prob('America'))
-      #  print(len(self.freq_dict))
 
     # this function replaces all keys with < 3 frequency with 'unk'
     def replaceUNKs(self, idict):
