@@ -1,9 +1,14 @@
 import sys 
 import re
 import math
+from fractions import Fraction
+import decimal
 
 # Open the file in read mode 
 #text = open(sys.argv[1], "r") 
+
+def decimal_from_fraction(frac):
+    return frac.numerator / decimal.Decimal(frac.denominator)
 
 class UnigramModel:
     def __init__(self, text):
@@ -41,20 +46,27 @@ class UnigramModel:
     def calcTokenProb(self, token):
         #The numerator is the frequency of the specified token, return 0 if not found in dict
         unigram_numerator = self.freq_dict.get(token, 0)
+
+        #If frequency is 0, the word is unkown
+        if unigram_numerator == 0:
+            unigram_numerator = self.freq_dict.get('unk', 0)
+
         #The denominator is just the size of the corpus
         unigram_denominator = self.corpusSize
-        print("Pr(" + token + "):")
-        print("numerator = ", unigram_numerator, "denominator = ", unigram_denominator)
-        return float(unigram_numerator) / float(unigram_denominator)
+        #print("Pr(" + token + "):")
+        #print("numerator = ", unigram_numerator, "denominator = ", unigram_denominator)
+        prob = Fraction(unigram_numerator, unigram_denominator)
+
+        return prob
 
     def calcSentenceProb(self, sentence):
-        print("Pr(" + str(sentence) + ")")
+        #print("Pr(" + str(sentence) + ")")
 
         #Return 0 for empty sentence
         if not sentence:
             return 0
 
-        prob = 1
+        prob = Fraction(1)
         #The MLE for a sentence is the product of the MLEs of its constituent tokens
         for token in sentence:
             prob = prob * self.calcTokenProb(token)
@@ -73,17 +85,22 @@ class UnigramModel:
             sampleSize += len(sentence)
             sentenceProb = self.calcSentenceProb(sentence)
 
+            #print(sentenceProb)
+            #print(decimal_from_fraction(sentenceProb))
+
             #Log is undefined if input is not > 0
-            if sentenceProb > 0:
-                logProb = math.log(self.calcSentenceProb(sentence), 2)
+            if sentenceProb.numerator > 0:
+                logProb = math.log(sentenceProb.numerator, 2) - math.log(sentenceProb.denominator, 2)
                 logSum += logProb
             #Here we assume Pr = 0, so perplexity is infinite, return -1 to signify this
             else:
-                return -1
+               print("Sentence:" + str(sentence))
+               return -1
+
 
         #To get perplexity, multiply this sum by the negative reciprocal 
         #of sample size and exponentiate it base 2
-        logSum = logSum * (float(-1) / float(sampleSize))
+        logSum = logSum * (-1 / float(sampleSize))
         perplexity = 2 ** logSum
 
         return perplexity
@@ -113,14 +130,6 @@ class UnigramModel:
 
 def main():
     uni = UnigramModel(sys.argv[1])
-
-    #Some tests
-    print("Pr(\"sibling\"): " + str(uni.calcTokenProb("sibling")))
-    sentence = ["This", "is", "a", "test", ".", "<STOP>"]
-    print(uni.calcSentenceProb(sentence))
-    print(uni.calcSentenceProb([]))
-
-    print("\n Perplexity: " + str(uni.calcPerplexity([sentence, ["hello", "world"]])))
 
     print("Files perplexity: " + str(uni.testModel(sys.argv[2])))
 
