@@ -8,15 +8,18 @@ class UnigramModel:
     def __init__(self, text):
         self.freq_dict = dict()
         for line in text:
+            # append stop token to EOLs
             line = line + ' <STOP>'
-            # remove whitespace and \n characters
-            line = line.strip()
             # split the line into tokens
             tokens = line.split(" ")
             # iterate through each token
             for token in tokens:
+                # remove whitespace and \n characters
+                token = token.strip()
+                # if token is already in dictionary then increment the count
                 if token in self.freq_dict:
                     self.freq_dict[token] = self.freq_dict[token] + 1
+                # else initialize that token's key with value 1
                 else:
                     self.freq_dict[token] = 1
 
