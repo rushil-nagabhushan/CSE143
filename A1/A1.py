@@ -1,5 +1,6 @@
 import sys 
 import re
+import math
 
 # Open the file in read mode 
 text = open(sys.argv[1], "r") 
@@ -58,6 +59,26 @@ class UnigramModel:
 
         return prob
 
+    #Takes a list of sentences and calculates the perplexity of the model given those senetences
+    def calcPerplexity(self, sentences):
+        logSum = 0
+
+        #Keep track of how many tokens are in the sample we are testing
+        sampleSize = 0
+
+        #Find the log probability of each sentence and sum them all up
+        for sentence in sentences:
+            sampleSize += len(sentence)
+            logProb = math.log(self.calcSentenceProb(sentence), 2)
+            logSum += logProb
+
+        #To get perplexity, multiply this sum by the negative reciprocal 
+        #of sample size and exponentiate it base 2
+        logSum = logSum * (float(-1) / float(sampleSize))
+        perplexity = 2 ** logSum
+
+        return perplexity
+
 # we still need to fill in a function that parses each line in the text
 # and implements the unigram language model by calling calc_prob
 
@@ -69,6 +90,8 @@ def main():
     sentence = ["This", "is", "a", "test", ".", "<STOP>"]
     print(uni.calcSentenceProb(sentence))
     print(uni.calcSentenceProb([]))
+
+    print("\n Perplexity: " + str(uni.calcPerplexity([sentence, ["hello", "world"]])))
 
 if __name__ == '__main__':
     main()
