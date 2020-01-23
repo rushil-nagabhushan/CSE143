@@ -6,8 +6,15 @@ from fractions import Fraction
 # Open the file in read mode 
 #text = open(sys.argv[1], "r") 
 
+train = "1b_benchmark.train.tokens"
+dev = "1b_benchmark.dev.tokens"
+test = "1b_benchmark.test.tokens"
+
+dashLine = "------------------------------------------------------------------------"
+
 class UnigramModel:
     def __init__(self, text):
+        print("Constructing Unigram Model...")
         textFile = open(text, "r")
         self.freq_dict = dict()
         self.corpusSize = 0
@@ -30,6 +37,7 @@ class UnigramModel:
 
         self.freq_dict = self.replaceUNKs(self.freq_dict)
         textFile.close()
+        print("Unigram model constructed!")
 
     # this function replaces all keys with < 3 frequency with 'unk'
     def replaceUNKs(self, idict):
@@ -69,7 +77,7 @@ class UnigramModel:
         return prob
 
     #Takes a list of sentences and calculates the perplexity of the model given those senetences
-    def calcPerplexity(self, sentences):
+    def calcPerplexityOLD(self, sentences):
         logSum = 0
 
         #Keep track of how many tokens are in the sample we are testing
@@ -96,9 +104,43 @@ class UnigramModel:
 
         return perplexity
 
+    def calcPerplexity(self, sentences):
+        sampleLogSum = 0
+
+        #Keep track of how many tokens are in the sample we are testing
+        sampleSize = 0
+
+        #Find the log probability of each sentence and sum them all up
+        for sentence in sentences:
+            sampleSize += len(sentence)
+
+            sentenceLogSum = 0
+
+            #The log probability of each sentence is the sum of the log probabilities
+            #of its constituent tokens
+            for token in sentence:
+                tokenProb = self.calcTokenProb(token)
+
+                if tokenProb > 0:
+                    sentenceLogSum += math.log(tokenProb.numerator, 2) - math.log(tokenProb.denominator, 2)
+                else:
+                    print("Token: " + token)
+                    return -1
+
+            sampleLogSum += sentenceLogSum
+
+        #To get perplexity, multiply this sum by the negative reciprocal 
+        #of sample size and exponentiate it base 2
+        sampleLogSum = sampleLogSum * (-1 / float(sampleSize))
+        perplexity = 2 ** sampleLogSum
+
+        return perplexity
+
+
     #Uses a test file and calculates perplexity based on that sample
     def testModel(self, test):
         testFile = open(test, "r")
+        print("Calculating perplexity of " + test)
 
         sentences = []
 
@@ -116,13 +158,22 @@ class UnigramModel:
         return self.calcPerplexity(sentences)
 
 
-# we still need to fill in a function that parses each line in the text
-# and implements the unigram language model by calling calc_prob
-
 def main():
-    uni = UnigramModel(sys.argv[1])
 
-    print("Files perplexity: " + str(uni.testModel(sys.argv[2])))
+    path = sys.argv[1] + "/"
+
+    print("\n" + dashLine)
+    uni = UnigramModel(path + train)
+    print(dashLine + "\n")
+    
+    print("\n" + dashLine)
+    print("Unigram train perplexity: " + str(uni.testModel(path + train)))
+    print("")
+    print("Unigram dev perplexity: " + str(uni.testModel(path + dev)))
+    print("")
+    print("Unigram test perplexity: " + str(uni.testModel(path + test)))
+    print(dashLine + "\n")
+
 
 if __name__ == '__main__':
     main()
